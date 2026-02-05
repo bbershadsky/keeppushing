@@ -1,58 +1,15 @@
 ---
-// Base 30-day plan template (for 50 push-ups). Scaled for other targets.
-const BASE_PLAN_50 = [
-  { type: "pushups", sets: [4, 2, 2] },
-  { type: "pushups", sets: [6, 2, 2] },
-  { type: "plank", seconds: 10, sets: 3 },
-  { type: "pushups", sets: [8, 4, 2] },
-  { type: "pushups", sets: [10, 4, 4] },
-  { type: "pushups", sets: [12, 4, 4] },
-  { type: "plank", seconds: 15, sets: 3 },
-  { type: "pushups", sets: [14, 6, 4] },
-  { type: "pushups", sets: [14, 6, 6] },
-  { type: "pushups", sets: [16, 6, 4] },
-  { type: "plank", seconds: 20, sets: 3 },
-  { type: "pushups", sets: [18, 8, 6] },
-  { type: "pushups", sets: [20, 8, 6] },
-  { type: "pushups", sets: [20, 10, 8] },
-  { type: "plank", seconds: 20, sets: 4 },
-  { type: "pushups", sets: [22, 10, 8] },
-  { type: "pushups", sets: [24, 12, 8] },
-  { type: "pushups", sets: [24, 12, 10] },
-  { type: "pushups", sets: [26, 12, 10] },
-  { type: "pushups", sets: [26, 14, 8] },
-  { type: "pushups", sets: [28, 14, 10] },
-  { type: "pushups", sets: [28, 14, 12] },
-  { type: "plank", seconds: 25, sets: 4 },
-  { type: "pushups", sets: [30, 14, 12] },
-  { type: "pushups", sets: [30, 15, 15] },
-  { type: "pushups", sets: [32, 16, 14] },
-  { type: "plank", seconds: 25, sets: 6 },
-  { type: "pushups", sets: [34, 16, 14] },
-  { type: "plank", seconds: 30, sets: 6 },
-  { type: "pushups", sets: [50] }, // day 30: target in one go
-];
+import PushUpApp from '../components/PushUpApp';
 
-export function generatePlan(current: number, target: number) {
-  return BASE_PLAN_50.map((day, i) => {
-    if (day.type === "plank") return day;
-    const isLastDay = i === BASE_PLAN_50.length - 1;
-    if (isLastDay) return { type: "pushups" as const, sets: [target] };
-    const origSets = day.sets;
-    const origTotal = origSets.reduce((a, b) => a + b, 0);
-    const progress = Math.min(1, origTotal / 50);
-    const dayTotal = Math.round(current + (target - current) * progress);
-    const scaled = origSets.map((s) =>
-      Math.max(1, Math.round((dayTotal * s) / origTotal))
-    );
-    let sum = scaled.reduce((a, b) => a + b, 0);
-    if (sum !== dayTotal) {
-      const diff = dayTotal - sum;
-      const idx = diff > 0 ? scaled.indexOf(Math.min(...scaled)) : scaled.indexOf(Math.max(...scaled));
-      scaled[idx] = Math.max(1, scaled[idx] + diff);
-    }
-    return { type: "pushups" as const, sets: scaled };
-  });
+// Get user from cookie if available
+let user = null;
+const userCookie = Astro.cookies.get('user-session');
+if (userCookie) {
+  try {
+    user = JSON.parse(userCookie.value);
+  } catch {
+    // Invalid cookie, ignore
+  }
 }
 ---
 
@@ -61,289 +18,135 @@ export function generatePlan(current: number, target: number) {
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Push-Up Plan Generator</title>
+		<title>Push-Up Challenge | 30-Day Progress Tracker</title>
+		<meta name="description" content="Track your 30-day push-up challenge progress. Set goals, mark completions, and share your achievements on LinkedIn." />
+		
+		<!-- Open Graph / LinkedIn -->
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content="Push-Up Challenge | 30-Day Progress Tracker" />
+		<meta property="og:description" content="Join the 30-day push-up challenge and track your progress to becoming stronger!" />
+		<meta property="og:image" content="/og-image.png" />
+		
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+		<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+		
 		<style is:global>
 			* {
 				box-sizing: border-box;
 			}
+			
 			:root {
-				--bg: #0f0f12;
-				--surface: #18181c;
-				--border: #2a2a30;
-				--text: #e4e4e7;
-				--muted: #71717a;
+				--bg: #0a0a0c;
+				--surface: #131316;
+				--surface-2: #1a1a1f;
+				--border: #27272a;
+				--border-hover: #3f3f46;
+				--text: #fafafa;
+				--text-secondary: #a1a1aa;
+				--text-muted: #71717a;
 				--accent: #f97316;
+				--accent-hover: #fb923c;
 				--accent-dim: rgba(249, 115, 22, 0.15);
-				--plank: #dc2626;
-				--plank-dim: rgba(220, 38, 38, 0.15);
+				--success: #22c55e;
+				--success-dim: rgba(34, 197, 94, 0.15);
+				--danger: #ef4444;
+				--danger-dim: rgba(239, 68, 68, 0.15);
 			}
+			
+			html {
+				scroll-behavior: smooth;
+			}
+			
 			body {
 				margin: 0;
-				font-family: "DM Sans", system-ui, sans-serif;
+				font-family: 'Space Grotesk', system-ui, sans-serif;
 				background: var(--bg);
 				color: var(--text);
 				min-height: 100vh;
-				line-height: 1.5;
+				line-height: 1.6;
+				-webkit-font-smoothing: antialiased;
+				-moz-osx-font-smoothing: grayscale;
 			}
+			
+			/* Subtle grid background pattern */
+			body::before {
+				content: '';
+				position: fixed;
+				inset: 0;
+				background-image: 
+					linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+					linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+				background-size: 60px 60px;
+				pointer-events: none;
+				z-index: -1;
+			}
+			
+			/* Gradient orb effect */
+			body::after {
+				content: '';
+				position: fixed;
+				top: -50%;
+				left: -50%;
+				width: 200%;
+				height: 200%;
+				background: radial-gradient(
+					circle at 30% 20%,
+					rgba(249, 115, 22, 0.08) 0%,
+					transparent 35%
+				);
+				pointer-events: none;
+				z-index: -1;
+			}
+			
 			main {
 				max-width: 900px;
 				margin: 0 auto;
-				padding: 2rem 1.5rem 4rem;
+				padding: 0 1.5rem 4rem;
 			}
-			h1 {
-				font-size: 1.75rem;
-				font-weight: 700;
-				letter-spacing: -0.02em;
-				margin: 0 0 0.5rem;
+			
+			/* Selection styling */
+			::selection {
+				background: rgba(249, 115, 22, 0.3);
+				color: white;
 			}
-			.subtitle {
-				color: var(--muted);
-				margin: 0 0 2rem;
-				font-size: 0.95rem;
+			
+			/* Scrollbar styling */
+			::-webkit-scrollbar {
+				width: 10px;
+				height: 10px;
 			}
-			.form-row {
-				display: flex;
-				gap: 0.75rem;
-				align-items: center;
-				flex-wrap: wrap;
-				margin-bottom: 2rem;
+			
+			::-webkit-scrollbar-track {
+				background: var(--bg);
 			}
-			label {
-				font-weight: 500;
-				color: var(--muted);
+			
+			::-webkit-scrollbar-thumb {
+				background: var(--border);
+				border-radius: 5px;
 			}
-			.form-row input[type="number"] {
-				width: 4.5rem;
-				padding: 0.6rem 0.75rem;
-				font-size: 1.1rem;
-				background: var(--surface);
-				border: 1px solid var(--border);
-				border-radius: 8px;
-				color: var(--text);
+			
+			::-webkit-scrollbar-thumb:hover {
+				background: var(--border-hover);
 			}
-			input[type="number"]:focus {
-				outline: none;
-				border-color: var(--accent);
-				box-shadow: 0 0 0 3px var(--accent-dim);
+			
+			/* Focus styles */
+			:focus-visible {
+				outline: 2px solid var(--accent);
+				outline-offset: 2px;
 			}
-			button {
-				padding: 0.6rem 1.25rem;
-				font-size: 1rem;
-				font-weight: 600;
-				background: var(--accent);
-				color: #fff;
-				border: none;
-				border-radius: 8px;
-				cursor: pointer;
-			}
-			button:hover {
-				filter: brightness(1.1);
-			}
-			.rule {
-				background: var(--surface);
-				border: 1px solid var(--border);
-				border-radius: 8px;
-				padding: 0.75rem 1rem;
-				margin-bottom: 2rem;
-				font-size: 0.9rem;
-				color: var(--muted);
-			}
-			.rule strong {
-				color: var(--text);
-			}
-			.plan-grid {
-				display: grid;
-				grid-template-columns: repeat(6, 1fr);
-				gap: 0.75rem;
-			}
-			.day-card {
-				background: var(--surface);
-				border: 1px solid var(--border);
-				border-radius: 10px;
-				padding: 1rem;
-				min-height: 100px;
-			}
-			.day-card.day-plank {
-				border-color: rgba(220, 38, 38, 0.4);
-				background: var(--plank-dim);
-			}
-			.day-card.day-final {
-				border-color: var(--accent);
-				background: var(--accent-dim);
-			}
-			.day-num {
-				font-size: 0.75rem;
-				font-weight: 600;
-				color: var(--muted);
-				margin-bottom: 0.5rem;
-			}
-			.day-content {
-				font-size: 0.85rem;
-				font-weight: 500;
-			}
-			.day-content.plank {
-				color: var(--plank);
-			}
-			.day-content.final {
-				color: var(--accent);
-			}
-			.empty-state {
-				text-align: center;
-				padding: 3rem 1rem;
-				color: var(--muted);
-			}
-			.empty-state p {
-				margin: 0;
+			
+			/* Remove tap highlight on mobile */
+			* {
+				-webkit-tap-highlight-color: transparent;
 			}
 		</style>
 	</head>
 	<body>
 		<main>
-			<h1>Push-Up Plan Generator</h1>
-			<p class="subtitle">Enter your current and target push-ups for a 30-day progressive plan.</p>
-
-			<div class="form-row">
-				<label for="current">Current push-ups (in one go)</label>
-				<input id="current" type="number" min="1" max="199" value="5" />
-				<label for="target">Target push-ups (in one go)</label>
-				<input id="target" type="number" min="5" max="200" value="50" />
-				<button type="button" id="generate">Generate plan</button>
-			</div>
-
-			<div class="rule">
-				<strong>20 seconds rest between sets.</strong> Follow the sets in order each day.
-			</div>
-
-			<div id="plan-container">
-				<div class="empty-state" id="empty-state">
-					<p>Enter a number and click Generate plan to see your 30-day program.</p>
-				</div>
-				<div class="plan-grid" id="plan-grid" hidden></div>
-			</div>
+			<PushUpApp client:load initialUser={user} />
 		</main>
-
-		<script>
-			const BASE_PLAN_50 = [
-				{ type: "pushups", sets: [4, 2, 2] },
-				{ type: "pushups", sets: [6, 2, 2] },
-				{ type: "plank", seconds: 10, sets: 3 },
-				{ type: "pushups", sets: [8, 4, 2] },
-				{ type: "pushups", sets: [10, 4, 4] },
-				{ type: "pushups", sets: [12, 4, 4] },
-				{ type: "plank", seconds: 15, sets: 3 },
-				{ type: "pushups", sets: [14, 6, 4] },
-				{ type: "pushups", sets: [14, 6, 6] },
-				{ type: "pushups", sets: [16, 6, 4] },
-				{ type: "plank", seconds: 20, sets: 3 },
-				{ type: "pushups", sets: [18, 8, 6] },
-				{ type: "pushups", sets: [20, 8, 6] },
-				{ type: "pushups", sets: [20, 10, 8] },
-				{ type: "plank", seconds: 20, sets: 4 },
-				{ type: "pushups", sets: [22, 10, 8] },
-				{ type: "pushups", sets: [24, 12, 8] },
-				{ type: "pushups", sets: [24, 12, 10] },
-				{ type: "pushups", sets: [26, 12, 10] },
-				{ type: "pushups", sets: [26, 14, 8] },
-				{ type: "pushups", sets: [28, 14, 10] },
-				{ type: "pushups", sets: [28, 14, 12] },
-				{ type: "plank", seconds: 25, sets: 4 },
-				{ type: "pushups", sets: [30, 14, 12] },
-				{ type: "pushups", sets: [30, 15, 15] },
-				{ type: "pushups", sets: [32, 16, 14] },
-				{ type: "plank", seconds: 25, sets: 6 },
-				{ type: "pushups", sets: [34, 16, 14] },
-				{ type: "plank", seconds: 30, sets: 6 },
-				{ type: "pushups", sets: [50] },
-			];
-
-			// Baseline: original plan goes from ~8 total (day 1) to 50 (day 30). Scale from current to target.
-			function generatePlan(current, target) {
-				return BASE_PLAN_50.map((day, i) => {
-					if (day.type === "plank") return day;
-					const isLastDay = i === BASE_PLAN_50.length - 1;
-					if (isLastDay) return { type: "pushups", sets: [target] };
-
-					const origSets = day.sets;
-					const origTotal = origSets.reduce((a, b) => a + b, 0);
-					// Progress 0..1 based on baseline (day 1 total=8, day 30=50)
-					const progress = Math.min(1, origTotal / 50);
-					const dayTotal = Math.round(current + (target - current) * progress);
-					// Distribute dayTotal across sets in same proportion, min 1 per set
-					const scaled = origSets.map((s) =>
-						Math.max(1, Math.round((dayTotal * s) / origTotal))
-					);
-					// Fix rounding: ensure sum equals dayTotal
-					let sum = scaled.reduce((a, b) => a + b, 0);
-					if (sum !== dayTotal) {
-						const diff = dayTotal - sum;
-						const idx = diff > 0 ? scaled.indexOf(Math.min(...scaled)) : scaled.indexOf(Math.max(...scaled));
-						scaled[idx] = Math.max(1, scaled[idx] + diff);
-					}
-					return { type: "pushups", sets: scaled };
-				});
-			}
-
-			const currentInput = document.getElementById("current");
-			const targetInput = document.getElementById("target");
-			const generateBtn = document.getElementById("generate");
-			const emptyState = document.getElementById("empty-state");
-			const planGrid = document.getElementById("plan-grid");
-
-			function renderPlan(plan) {
-				if (!plan || plan.length === 0) {
-					emptyState.hidden = false;
-					planGrid.hidden = true;
-					return;
-				}
-				emptyState.hidden = true;
-				planGrid.hidden = false;
-				planGrid.innerHTML = plan
-					.map((day, i) => {
-						const dayNum = i + 1;
-						if (day.type === "plank") {
-							return `
-                <div class="day-card day-plank">
-                  <div class="day-num">Day ${dayNum}</div>
-                  <div class="day-content plank">${day.seconds}s push-up plank hold, ${day.sets} sets</div>
-                </div>`;
-						}
-						const isFinal = dayNum === 30;
-						const content =
-							day.sets.length === 1
-								? `${day.sets[0]} push-ups in one go`
-								: day.sets.map((n) => `${n} push-ups`).join(", ");
-						return `
-              <div class="day-card ${isFinal ? "day-final" : ""}">
-                <div class="day-num">Day ${dayNum}</div>
-                <div class="day-content ${isFinal ? "final" : ""}">${content}</div>
-              </div>`;
-					})
-					.join("");
-			}
-
-			generateBtn.addEventListener("click", () => {
-				const rawCurrent = parseInt(currentInput.value, 10);
-				const rawTarget = parseInt(targetInput.value, 10);
-				const current = Math.min(199, Math.max(1, isNaN(rawCurrent) ? 5 : rawCurrent));
-				let target = Math.min(200, Math.max(5, isNaN(rawTarget) ? 50 : rawTarget));
-				if (current >= target) target = current + 1;
-				currentInput.value = current;
-				targetInput.value = target;
-				const plan = generatePlan(current, target);
-				renderPlan(plan);
-			});
-
-			currentInput.addEventListener("keydown", (e) => {
-				if (e.key === "Enter") generateBtn.click();
-			});
-			targetInput.addEventListener("keydown", (e) => {
-				if (e.key === "Enter") generateBtn.click();
-			});
-		</script>
 	</body>
 </html>
