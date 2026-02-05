@@ -5,12 +5,17 @@ interface DashboardProps {
   targetPushups: number;
 }
 
-export default function Dashboard({ completedDays, startDate, currentPushups, targetPushups }: DashboardProps) {
+export default function Dashboard({
+  completedDays,
+  startDate,
+  currentPushups,
+  targetPushups,
+}: DashboardProps) {
   const totalDays = 30;
   const completedCount = completedDays.length;
   const percentComplete = Math.round((completedCount / totalDays) * 100);
   const daysRemaining = totalDays - completedCount;
-  
+
   // Calculate streak (consecutive days from the beginning)
   const sortedDays = [...completedDays].sort((a, b) => a - b);
   let streak = 0;
@@ -21,7 +26,7 @@ export default function Dashboard({ completedDays, startDate, currentPushups, ta
       break;
     }
   }
-  
+
   // Calculate current day of challenge
   const start = new Date(startDate);
   const today = new Date();
@@ -30,7 +35,7 @@ export default function Dashboard({ completedDays, startDate, currentPushups, ta
   const diffTime = today.getTime() - start.getTime();
   const currentDay = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
   const displayDay = Math.min(Math.max(1, currentDay), 30);
-  
+
   // Calculate if on track
   const expectedCompletions = Math.min(currentDay, 30);
   const isOnTrack = completedCount >= expectedCompletions - 1; // Allow 1 day grace
@@ -40,8 +45,13 @@ export default function Dashboard({ completedDays, startDate, currentPushups, ta
       <div className="stats-grid">
         <div className="stat-card accent">
           <div className="stat-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
             </svg>
           </div>
           <div className="stat-content">
@@ -49,49 +59,52 @@ export default function Dashboard({ completedDays, startDate, currentPushups, ta
             <div className="stat-label">Day Streak</div>
           </div>
         </div>
-        
-        <div className="stat-card">
-          <div className="stat-icon progress-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{percentComplete}%</div>
-            <div className="stat-label">Complete</div>
-          </div>
+
+        <div className="stat-card progress-card">
           <div className="progress-ring">
             <svg viewBox="0 0 36 36">
-              <path
-                d="M18 2.0845
-                  a 15.9155 15.9155 0 0 1 0 31.831
-                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              <defs>
+                <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#4ade80" />
+                  <stop offset="100%" stopColor="#16a34a" />
+                </linearGradient>
+              </defs>
+              <circle
+                cx="18" cy="18" r="15.9155"
                 fill="none"
                 stroke="#2a2a30"
-                strokeWidth="3"
+                strokeWidth="2"
               />
-              <path
-                d="M18 2.0845
-                  a 15.9155 15.9155 0 0 1 0 31.831
-                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              <circle
+                cx="18" cy="18" r="15.9155"
                 fill="none"
-                stroke="#22c55e"
-                strokeWidth="3"
-                strokeDasharray={`${percentComplete}, 100`}
+                stroke="url(#progressGrad)"
+                strokeWidth="2.5"
+                strokeDasharray={`${percentComplete} 100`}
+                strokeDashoffset="0"
                 strokeLinecap="round"
+                style={{ transition: 'stroke-dasharray 0.6s ease' }}
               />
             </svg>
+            <span className="progress-ring-value">{percentComplete}%</span>
+          </div>
+          <div className="stat-content">
+            <div className="stat-label">Complete</div>
           </div>
         </div>
-        
+
         <div className="stat-card">
           <div className="stat-icon remaining-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
           </div>
           <div className="stat-content">
@@ -99,52 +112,66 @@ export default function Dashboard({ completedDays, startDate, currentPushups, ta
             <div className="stat-label">Days Left</div>
           </div>
         </div>
-        
+
         <div className="stat-card">
           <div className="stat-icon day-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
           </div>
           <div className="stat-content">
             <div className="stat-value">Day {displayDay}</div>
-            <div className="stat-label">{isOnTrack ? 'On Track' : 'Keep Going'}</div>
+            <div className="stat-label">
+              {isOnTrack ? "On Track" : "Keep Going"}
+            </div>
           </div>
           {isOnTrack && <div className="on-track-badge">✓</div>}
         </div>
       </div>
-      
+
       <div className="challenge-info">
         <span className="info-item">
           <span className="info-label">Goal:</span>
-          <span className="info-value">{currentPushups} → {targetPushups} push-ups</span>
+          <span className="info-value">
+            {currentPushups} → {targetPushups} push-ups
+          </span>
         </span>
         <span className="info-divider">•</span>
         <span className="info-item">
           <span className="info-label">Started:</span>
-          <span className="info-value">{new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+          <span className="info-value">
+            {new Date(startDate).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
         </span>
       </div>
-      
+
       <style>{`
         .dashboard {
           margin-bottom: 2rem;
         }
-        
+
         .stats-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 1rem;
           margin-bottom: 1rem;
         }
-        
+
         @media (max-width: 768px) {
           .stats-grid {
             grid-template-columns: repeat(2, 1fr);
           }
         }
-        
+
         .stat-card {
           background: linear-gradient(145deg, #1a1a1f 0%, #151518 100%);
           border: 1px solid #2a2a30;
@@ -156,12 +183,12 @@ export default function Dashboard({ completedDays, startDate, currentPushups, ta
           position: relative;
           overflow: hidden;
         }
-        
+
         .stat-card.accent {
           background: linear-gradient(145deg, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.05) 100%);
           border-color: rgba(249, 115, 22, 0.3);
         }
-        
+
         .stat-icon {
           width: 44px;
           height: 44px;
@@ -172,31 +199,30 @@ export default function Dashboard({ completedDays, startDate, currentPushups, ta
           justify-content: center;
           flex-shrink: 0;
         }
-        
+
         .stat-card.accent .stat-icon {
           background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
           box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
         }
-        
+
         .stat-icon svg {
           width: 22px;
           height: 22px;
           color: #71717a;
         }
-        
+
         .stat-card.accent .stat-icon svg {
           color: white;
         }
-        
-        .progress-icon svg { color: #22c55e; }
+
         .remaining-icon svg { color: #a78bfa; }
         .day-icon svg { color: #38bdf8; }
-        
+
         .stat-content {
           flex: 1;
           min-width: 0;
         }
-        
+
         .stat-value {
           font-size: 1.5rem;
           font-weight: 700;
@@ -204,7 +230,7 @@ export default function Dashboard({ completedDays, startDate, currentPushups, ta
           line-height: 1.2;
           letter-spacing: -0.02em;
         }
-        
+
         .stat-label {
           font-size: 0.75rem;
           color: #71717a;
@@ -212,20 +238,47 @@ export default function Dashboard({ completedDays, startDate, currentPushups, ta
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
-        
-        .progress-ring {
-          position: absolute;
-          right: 0.75rem;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 48px;
-          height: 48px;
+
+        .progress-card {
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          padding: 1rem;
+          gap: 0.375rem;
         }
-        
+
+        .progress-card .stat-content {
+          min-width: 0;
+          flex: 0;
+        }
+
+        .progress-ring {
+          position: relative;
+          width: 72px;
+          height: 72px;
+          flex-shrink: 0;
+        }
+
         .progress-ring svg {
           transform: rotate(-90deg);
+          width: 100%;
+          height: 100%;
         }
-        
+
+        .progress-ring-value {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.125rem;
+          font-weight: 800;
+          color: #f4f4f5;
+          line-height: 1;
+          letter-spacing: -0.02em;
+        }
+
         .on-track-badge {
           position: absolute;
           top: 0.75rem;
@@ -241,7 +294,7 @@ export default function Dashboard({ completedDays, startDate, currentPushups, ta
           color: white;
           font-weight: 700;
         }
-        
+
         .challenge-info {
           display: flex;
           align-items: center;
@@ -253,7 +306,7 @@ export default function Dashboard({ completedDays, startDate, currentPushups, ta
           border-radius: 10px;
           font-size: 0.875rem;
         }
-        
+
         @media (max-width: 480px) {
           .challenge-info {
             flex-direction: column;
@@ -263,21 +316,21 @@ export default function Dashboard({ completedDays, startDate, currentPushups, ta
             display: none;
           }
         }
-        
+
         .info-item {
           display: flex;
           gap: 0.375rem;
         }
-        
+
         .info-label {
           color: #71717a;
         }
-        
+
         .info-value {
           color: #e4e4e7;
           font-weight: 500;
         }
-        
+
         .info-divider {
           color: #3f3f46;
         }

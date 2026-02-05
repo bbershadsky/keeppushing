@@ -557,63 +557,12 @@ export default function PushUpApp({ initialUser }: PushUpAppProps) {
           }
         }
         
-        /* Auth button styles */
-        :global(.auth-container) {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-        
-        :global(.user-name) {
-          color: #fafafa;
-          font-size: 0.875rem;
-          font-weight: 500;
-        }
-        
-        :global(.auth-btn) {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.625rem 1rem;
-          border-radius: 10px;
-          font-size: 0.875rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          border: none;
-        }
-        
-        :global(.auth-btn.sign-in) {
-          background: white;
-          color: #1f1f23;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-        
-        :global(.auth-btn.sign-in:hover) {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-        
-        :global(.auth-btn.sign-out) {
-          background: #27272a;
-          color: #a1a1aa;
-        }
-        
-        :global(.auth-btn.sign-out:hover) {
-          background: #3f3f46;
-          color: #fafafa;
-        }
-        
-        :global(.google-icon) {
-          flex-shrink: 0;
-        }
-        
         @media (max-width: 480px) {
           .header-content {
             flex-direction: column;
             align-items: flex-start;
           }
-          
+
           .header-actions {
             width: 100%;
             justify-content: flex-end;
