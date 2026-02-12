@@ -6,6 +6,9 @@ import DayCard from './DayCard';
 import ShareButton from './ShareButton';
 import NotificationToggle from './NotificationToggle';
 import { registerServiceWorker, scheduleNotificationCheck, getNotificationTime } from '../lib/notifications';
+import { Capacitor } from '@capacitor/core';
+import { initializePushNotifications } from '../lib/capacitor-notifications';
+import { initializeMobileApp } from '../lib/mobile-config';
 
 interface User {
   id: string;
@@ -133,11 +136,21 @@ export default function PushUpApp({ initialUser }: PushUpAppProps) {
   const [lastCompletedDay, setLastCompletedDay] = useState<{ dayNumber: number; content: string } | undefined>();
   const [notificationEnabled, setNotificationEnabled] = useState(false);
 
-  // Register service worker and set up notifications on mount
+  // Initialize app and set up notifications on mount
   useEffect(() => {
-    async function setupNotifications() {
-      // Register service worker
-      await registerServiceWorker();
+    async function initializeApp() {
+      // Initialize mobile app configuration (status bar, splash screen, etc.)
+      await initializeMobileApp();
+
+      // Initialize native push notifications if in Capacitor app
+      if (Capacitor.isNativePlatform()) {
+        console.log('[PushUpApp] Running in native Capacitor app');
+        await initializePushNotifications();
+      } else {
+        // Register service worker for web
+        console.log('[PushUpApp] Running in web browser');
+        await registerServiceWorker();
+      }
 
       // Check notification preferences
       const prefs = getNotificationTime();
@@ -149,7 +162,7 @@ export default function PushUpApp({ initialUser }: PushUpAppProps) {
       }
     }
 
-    setupNotifications();
+    initializeApp();
   }, []);
 
   // Update notification schedule when challenge changes

@@ -25,3 +25,18 @@ pnpm-debug.log*
 .vercel
 
 .vercel
+
+# Android
+android/build/
+android/.gradle/
+android/local.properties
+android/.idea/
+android/captures/
+android/app/release/
+*.keystore
+*.jks
+android/app/keystore.properties
+android/app/google-services.json
+
+# Firebase Admin SDK key (server-side; never commit)
+*firebase-adminsdk*.json

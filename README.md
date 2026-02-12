@@ -2,6 +2,8 @@
 
 A 30-day progressive push-up training program with progress tracking, optional Google sign-in for cross-device sync, and LinkedIn sharing.
 
+**Available on Web & Android!** 📱
+
 ## Features
 
 - **Works Without Sign-In**: Use the app immediately - progress is saved locally in your browser
@@ -11,14 +13,17 @@ A 30-day progressive push-up training program with progress tracking, optional G
 - **Optional Google Sign-In**: Sign in to sync progress across devices and browsers
 - **LinkedIn Sharing**: Share your progress and achievements with your network
 - **Mobile-First Design**: Beautiful vertical list layout on mobile, grid on desktop
+- **Native Android App**: Full Android app with push notifications (see Android Setup below)
 
 ## Tech Stack
 
 - **Framework**: [Astro](https://astro.build/) with React integration
+- **Mobile**: [Ionic Capacitor](https://capacitorjs.com/) for native Android app
 - **Database**: [Neon PostgreSQL](https://neon.tech/) (serverless Postgres) - only needed for signed-in users
 - **Authentication**: Google OAuth (direct integration, no heavy auth libraries)
+- **Push Notifications**: Firebase Cloud Messaging for Android, Service Worker for web
 - **Local Storage**: Browser localStorage for anonymous users
-- **Deployment**: [Vercel](https://vercel.com/)
+- **Deployment**: Web on [Vercel](https://vercel.com/), Android on Google Play Store
 
 ## Setup
 
@@ -127,6 +132,45 @@ src/
 | `npm run dev`     | Start local dev server at `localhost:4321`   |
 | `npm run build`   | Build production site to `./dist/`           |
 | `npm run preview` | Preview build locally before deploying       |
+
+## 📱 Android App Setup
+
+This project includes a complete native Android app setup using Ionic Capacitor!
+
+### Quick Start - Android
+
+```bash
+# Build web assets
+npm run build
+
+# Sync to Android
+npx cap sync android
+
+# Open in Android Studio
+npx cap open android
+```
+
+### Complete Android Documentation
+
+See **[ANDROID_SETUP_README.md](ANDROID_SETUP_README.md)** for complete setup instructions.
+
+**Step-by-step guides:**
+1. **[FIREBASE_SETUP.md](FIREBASE_SETUP.md)** - Configure Firebase for push notifications
+2. **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Test on emulator/device
+3. **[RELEASE_SIGNING_GUIDE.md](RELEASE_SIGNING_GUIDE.md)** - Create release keystore
+4. **[BUILD_RELEASE_GUIDE.md](BUILD_RELEASE_GUIDE.md)** - Build signed AAB
+5. **[PLAY_STORE_ASSETS_GUIDE.md](PLAY_STORE_ASSETS_GUIDE.md)** - Prepare store assets
+6. **[PLAY_STORE_SUBMISSION.md](PLAY_STORE_SUBMISSION.md)** - Submit to Play Store
+
+### Android Features
+
+- ✅ Native Android app (Capacitor-powered)
+- ✅ Push notifications via Firebase Cloud Messaging
+- ✅ Status bar customization
+- ✅ Splash screen
+- ✅ Offline support
+- ✅ Google Play Store ready
+- ✅ App lifecycle management
 
 ## License
 

@@ -1,4 +1,8 @@
 // Notification service for managing daily push-up reminders
+// Supports both web (Service Worker) and native (Capacitor) notifications
+
+import { Capacitor } from '@capacitor/core';
+import * as CapNotif from './capacitor-notifications';
 
 const STORAGE_KEY_ENABLED = 'notification-enabled';
 const STORAGE_KEY_TIME = 'notification-time';
@@ -9,10 +13,23 @@ export interface NotificationPreferences {
   enabled: boolean;
   time: string; // 12-hour format (e.g., "12:00 PM")
   time24h: string; // 24-hour format (e.g., "12:00")
+  fcmToken?: string; // Only for native app
 }
 
-// Request notification permission from browser
-export async function requestPermission(): Promise<NotificationPermission> {
+// Check if running in native Capacitor app
+function isNativeApp(): boolean {
+  return Capacitor.isNativePlatform();
+}
+
+// Request notification permission (native or web)
+export async function requestPermission(): Promise<NotificationPermission | 'granted' | 'denied' | 'prompt'> {
+  // Use native notifications if in Capacitor app
+  if (isNativeApp()) {
+    const result = await CapNotif.requestNativePermission();
+    return result as NotificationPermission;
+  }
+  
+  // Fall back to web notifications
   if (!('Notification' in window)) {
     return 'denied';
   }
@@ -32,6 +49,8 @@ export async function requestPermission(): Promise<NotificationPermission> {
 // Check if notifications are enabled
 export function isNotificationEnabled(): boolean {
   if (typeof window === 'undefined') return false;
+  
+  // Use same storage for both native and web
   const stored = localStorage.getItem(STORAGE_KEY_ENABLED);
   return stored === 'true';
 }
@@ -46,6 +65,12 @@ export function getNotificationTime(): NotificationPreferences {
     };
   }
   
+  // Use native implementation if in Capacitor
+  if (isNativeApp()) {
+    return CapNotif.getNotificationPreferences();
+  }
+  
+  // Web implementation
   const enabled = localStorage.getItem(STORAGE_KEY_ENABLED) === 'true';
   const time = localStorage.getItem(STORAGE_KEY_TIME) || DEFAULT_TIME;
   const time24h = localStorage.getItem(STORAGE_KEY_TIME_24H) || '12:00';
@@ -58,9 +83,16 @@ export function getNotificationTime(): NotificationPreferences {
 }
 
 // Set notification preferences
-export function setNotificationPreferences(prefs: NotificationPreferences): void {
+export async function setNotificationPreferences(prefs: NotificationPreferences): Promise<void> {
   if (typeof window === 'undefined') return;
   
+  // Use native implementation if in Capacitor
+  if (isNativeApp()) {
+    await CapNotif.setNotificationPreferences(prefs);
+    return;
+  }
+  
+  // Web implementation
   localStorage.setItem(STORAGE_KEY_ENABLED, prefs.enabled.toString());
   localStorage.setItem(STORAGE_KEY_TIME, prefs.time);
   localStorage.setItem(STORAGE_KEY_TIME_24H, prefs.time24h);
@@ -141,6 +173,14 @@ export async function scheduleNotificationCheck(): Promise<void> {
     return;
   }
   
+  // Use native implementation if in Capacitor
+  if (isNativeApp()) {
+    console.log('[Notifications] Using native push notifications');
+    await CapNotif.initializePushNotifications();
+    return;
+  }
+  
+  // Web implementation with Service Worker
   // Request permission if not granted
   const permission = await requestPermission();
   if (permission !== 'granted') {
@@ -198,6 +238,21 @@ export async function scheduleNotificationCheck(): Promise<void> {
 // Test notification (for debugging)
 export async function testNotification(): Promise<void> {
   console.log('[Notifications] Test notification requested');
+  
+  // Use native test if in Capacitor
+  if (isNativeApp()) {
+    console.log('[Notifications] Using native test notification');
+    try {
+      await CapNotif.testNativeNotification();
+      console.log('[Notifications] Native test notification sent');
+    } catch (error) {
+      console.error('[Notifications] Native test failed:', error);
+      throw error;
+    }
+    return;
+  }
+  
+  // Web implementation
   console.log('[Notifications] Current permission:', Notification.permission);
 
   const permission = await requestPermission();
